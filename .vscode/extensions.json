@@ -1,0 +1,13 @@
+{
+  "recommendations": [
+    "coenraads.bracket-pair-colorizer",
+    "dbaeumer.vscode-eslint",
+    "drknoxy.eslint-disable-snippets",
+    "editorconfig.editorconfig",
+    "esbenp.prettier-vscode",
+    "mgmcdermott.vscode-language-babel",
+    "mikestead.dotenv",
+    "ramyaraoa.show-offset",
+    "tyriar.sort-lines"
+  ]
+}

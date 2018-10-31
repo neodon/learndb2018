@@ -1,0 +1,11 @@
+#!/bin/bash
+set -euo pipefail
+cd "$(dirname "$0")/.."
+IFS=$'\t\n'
+
+if (($# > 0)); then
+  echo "$0 does not take args, it runs on all branches except main"
+fi
+
+# shellcheck disable=SC2016
+scripts/fe 'git push --force-with-lease'

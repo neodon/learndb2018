@@ -1,0 +1,16 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# node npm dependencies
+node_modules/
+
+# dotenv environment variables file
+.env.local
+
+# BeyondCompare backups
+*.orig
+
+/db_temp/
+/db_bench/

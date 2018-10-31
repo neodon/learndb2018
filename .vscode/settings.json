@@ -1,0 +1,7 @@
+{
+  "editor.formatOnSave": true,
+  "files.autoSave": "onFocusChange",
+  "javascript.format.enable": false,
+  "prettier.eslintIntegration": true,
+  "prettier.requireConfig": true
+}

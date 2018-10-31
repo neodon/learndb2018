@@ -1,0 +1,53 @@
+#!/bin/bash
+set -euo pipefail
+cd "$(dirname "$0")/.."
+IFS=$'\t\n'
+
+function nuke_branch() {
+  usage='Usage: nuke_branch <remote> <branch>'
+  local remote="${1:?$usage}" branch="${2:?$usage}"
+
+  current_branch="$(git rev-parse --abbrev-ref HEAD)"
+
+  if [[ "$current_branch" == "$branch" ]]; then
+    echo "You are currently on the branch you want to delete: $current_branch"
+    echo "Git won't allow this, so you must change to another branch first"
+    return 1
+  fi
+
+  if ! git remote | grep --color -Fx "$remote" &>/dev/null; then
+    echo "The remote specified does not exist: $remote"
+    echo "You can get a list of remotes and their URLs by running 'git remote -v'"
+    return 1
+  fi
+
+  echo
+  echo "Deleting local branch: $branch"
+  if ! git branch --delete "$branch"; then
+    echo "Failed to delete local branch -- it might not exist"
+  fi
+
+  echo
+  echo "Deleting tracking branch: $remote/$branch"
+  if ! git branch --delete --remotes "$remote/$branch"; then
+    echo "Failed to delete tracking branch -- it might not exist"
+  fi
+
+  echo
+  echo "Deleting remote branch: $branch on remote $remote"
+  if ! git push "$remote" ":${branch}"; then
+    echo "Failed to delete remote branch -- it might not exist"
+  fi
+}
+
+function main() {
+  local branch="${1:?}"
+
+  local new_branch="${branch/key-value-store/ksv}"
+  echo "branch=$branch new_branch=$new_branch"
+  git checkout -b "$new_branch"
+  git push -u origin HEAD
+  nuke_branch origin "$branch"
+}
+
+main "$@"
