@@ -1,0 +1,19 @@
+{
+  "folders": [
+    {
+      "path": "."
+    }
+  ],
+  "settings": {},
+  "extensions": {
+    "recommendations": [
+      "editorconfig.editorconfig",
+      "ramyaraoa.show-offset",
+      "coenraads.bracket-pair-colorizer",
+      "mikestead.dotenv",
+      "dbaeumer.vscode-eslint",
+      "esbenp.prettier-vscode",
+      "mgmcdermott.vscode-language-babel"
+    ]
+  }
+}
