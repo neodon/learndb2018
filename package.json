@@ -5,6 +5,7 @@
   "license": "ALL_RIGHTS_RESERVED",
   "private": true,
   "scripts": {
+    "benchmarks": "node --require @babel/register src/benchmarks.js",
     "test": "run-s test:e2e",
     "test:e2e": "mocha --require @babel/register --full-trace tests/**/*.js",
     "test:challenges": "cross-env CHALLENGES=1 run-s test:e2e",
