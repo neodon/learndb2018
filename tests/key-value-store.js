@@ -24,12 +24,14 @@ describe('KeyValueStore', () => {
   // Allows us to give each test a unique directory.
   let testId = 1
 
+  // Functions passed to before() run only once, before any of the tests run.
   before(() => {
     // Safety check so we don't delete the wrong files
     assert.endsWith(dbTempPath, 'db_temp')
     shell.rm('-rf', dbTempPath)
   })
 
+  // Functions passed to beforeEach will run before every test.
   beforeEach(() => {
     // Generate a unique path in the project root to hold the db files for this test.
     dbPath = path.resolve(dbTempPath, process.pid.toString() + '_' + (testId++).toString())
