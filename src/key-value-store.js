@@ -1,10 +1,10 @@
 import path from 'path'
 import fs from 'fs'
 import shell from 'shelljs'
-import stringHash from 'string-hash'
 
-const VALUE_INDEX = 0
-const KEY_INDEX = 1
+const KEY_INDEX = 0
+const VALUE_INDEX = 1
+const IS_DELETED_INDEX = 2
 
 export class KeyValueStore {
   constructor({ dbPath }) {
@@ -15,53 +15,53 @@ export class KeyValueStore {
     shell.mkdir('-p', this.dbPath)
   }
 
-  set(key, value) {
-    const keyHash = stringHash(key)
-    const fileName = `${keyHash}.json`
-    // Creates the file if it does not exist or overwrites it if it does exist.
-    // Sets the file content to the JSON for the entry.
-    fs.writeFileSync(
-      path.resolve(this.dbPath, fileName),
-      JSON.stringify([value, key])
+  set(key, value, isDeleted = false) {
+    // Creates the file if it does not exist, and appends a new line to the end
+    // containing the JSON for the entry.
+    fs.appendFileSync(
+      path.resolve(this.dbPath, 'store.json'),
+      JSON.stringify([key, value, isDeleted]) + '\n'
     )
   }
 
   get(key) {
-    const keyHash = stringHash(key)
-    const fileName = `${keyHash}.json`
-
-    if (!fs.existsSync(path.resolve(this.dbPath, fileName))) {
-      return undefined // If the file doesn't exist, there's no value set for the key.
+    if (!fs.existsSync(path.resolve(this.dbPath, 'store.json'))) {
+      return undefined // If the store doesn't exist, it can't contain the key.
     }
 
     // readFileSync returns a Buffer object that represents binary data.
-    const buffer = fs.readFileSync(path.resolve(this.dbPath, fileName))
+    const buffer = fs.readFileSync(path.resolve(this.dbPath, 'store.json'))
 
-    // Stringify the buffer so we can parse it as JSON.
+    // Stringify the buffer so we can split it into lines.
     const bufferString = buffer.toString()
 
-    // Parse the JSON into an array representing an entry.
-    const entry = JSON.parse(bufferString)
+    // Split the buffer into lines.
+    const lines = bufferString.split('\n')
 
-    // Verify the key matches
-    if (entry[KEY_INDEX] !== key) {
-      throw new Error(
-        `Keys do not match: '${
-          entry[KEY_INDEX]
-        }' !== '${key}' -- probably a hash collision.`
+    // Filter out empty lines--usually the last one since we always write a
+    // newline after each set().  This leaves us with just JSON data.
+    const jsonLines = lines.filter(line => line.length > 0)
+
+    // Parse the JSON in each line into an array representing an entry.
+    const entries = jsonLines.map(jsonLine => JSON.parse(jsonLine))
+
+    // We want to search most recent entries first.  In JavaScript, .sort() and
+    // .reverse() modify the array in-place.
+    entries.reverse()
+
+    for (const entry of entries) {
+      if (entry[KEY_INDEX] === key) {
+        return entry[IS_DELETED_INDEX]
+          ? undefined // The isDeleted flag is set to true
+          : entry[VALUE_INDEX] // Return the value for the key
       )
     }
 
-    // Return the value for the key.
-    return entry[VALUE_INDEX]
+    return undefined // The key was not found
   }
 
   delete(key) {
-    const keyHash = stringHash(key)
-    const fileName = `${keyHash}.json`
-    if (fs.existsSync(path.resolve(this.dbPath, fileName))) {
-      fs.unlinkSync(path.resolve(this.dbPath, fileName))
-    }
+    this.set(key, null, true)
   }
 
   checkAndSet({ key, expectedValue, newValue }) {
