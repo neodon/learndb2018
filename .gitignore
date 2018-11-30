@@ -11,3 +11,6 @@ node_modules/
 
 # BeyondCompare backups
 *.orig
+
+/db_temp/
+/db_bench/

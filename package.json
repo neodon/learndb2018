@@ -6,7 +6,8 @@
   "private": true,
   "scripts": {
     "test": "run-s test:e2e",
-    "test:e2e": "mocha --require @babel/register --full-trace tests/**/*.js"
+    "test:e2e": "mocha --require @babel/register --full-trace tests/**/*.js",
+    "rebase": "node --require babel-polyfill --require @babel/register scripts/rebase.js"
   },
   "dependencies": {
     "@babel/core": "7.4.5",

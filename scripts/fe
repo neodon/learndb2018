@@ -1,0 +1,27 @@
+#!/bin/bash
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+branches=(
+  ksv-simple
+  ksv-fsdb
+  ksv-disk
+  ksv-sst
+)
+
+function main() {
+  last_branch='main'
+
+  for branch in "${branches[@]}"; do
+    git switch -q "$branch"
+    echo "$branch"
+    eval "$*"
+    echo
+    # shellcheck disable=2034
+    last_branch="$branch"
+  done
+
+  git switch -q main
+}
+
+main "$@"
