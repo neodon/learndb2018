@@ -6,13 +6,15 @@
   "private": true,
   "scripts": {
     "test": "run-s test:e2e",
-    "test:e2e": "mocha --require @babel/register --full-trace tests/**/*.js"
+    "test:e2e": "mocha --require @babel/register --full-trace tests/**/*.js",
+    "rebase": "node --require babel-polyfill --require @babel/register scripts/rebase.js"
   },
   "dependencies": {
     "@babel/core": "^7.1.6",
     "@babel/preset-env": "^7.1.6",
     "@babel/register": "^7.0.0",
     "babel-eslint": "^10.0.1",
+    "babel-polyfill": "^6.26.0",
     "chai-string": "^1.5.0",
     "cross-env": "^5.2.0",
     "npm-run-all": "^4.1.5"
