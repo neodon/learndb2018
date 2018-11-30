@@ -32,10 +32,12 @@ if (process.argv[2] === 'continue') {
   if (!rebaseEntry) {
     throw new Error(`Unrecognized branch: ${currentBranch}`)
   }
-  startIndex = rebaseEntries.indexOf(rebaseEntry)
+  startIndex = rebaseEntries.indexOf(rebaseEntry) + 1
 }
 
 function execMustSucceed(command) {
+  const currentBranch = shell.exec('git rev-parse --abbrev-ref HEAD').trim()
+  console.log(`Executing command: '${command}' in branch ${currentBranch}`)
   const result = shell.exec(command)
   if (result.code !== 0) {
     throw new Error(`Command '${command}' failed`)
@@ -46,6 +48,6 @@ for (const { branch, rebaseTarget } of rebaseEntries.slice(startIndex)) {
   execMustSucceed(`git co ${branch}`)
   execMustSucceed(`git fetch`)
   execMustSucceed(`git status`)
-  execMustSucceed(`git rebase --onto ${rebaseTarget} ${rebaseTarget}`)
+  execMustSucceed(`git rebase --onto ${rebaseTarget} origin/${rebaseTarget}`)
   execMustSucceed(`git status`)
 }
