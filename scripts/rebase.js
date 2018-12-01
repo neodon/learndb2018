@@ -10,6 +10,7 @@ manually perform the following rebases:
 * key-value-store-simple_after on key-value-store-simple_before
 * key-value-store-fsdb_before on key-value-store-simple_after
 * key-value-store-fsdb_after on key-value-store-fsdb_before
+* ... and more as I add lessons and branches
 
 It's quite tedious, so I made this script to automate it.
 */
@@ -21,6 +22,8 @@ const rebaseEntries = [
   { branch: 'key-value-store-simple_after', rebaseTarget: 'key-value-store-simple_before' },
   { branch: 'key-value-store-fsdb_before', rebaseTarget: 'key-value-store-simple_after' },
   { branch: 'key-value-store-fsdb_after', rebaseTarget: 'key-value-store-fsdb_before' },
+  { branch: 'key-value-store-disk_before', rebaseTarget: 'key-value-store-fsdb_after' },
+  { branch: 'key-value-store-disk_after', rebaseTarget: 'key-value-store-disk_before' },
 ]
 
 let startIndex = 0
