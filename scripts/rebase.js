@@ -24,6 +24,8 @@ const rebaseEntries = [
   { branch: 'key-value-store-fsdb_after', rebaseTarget: 'key-value-store-fsdb_before' },
   { branch: 'key-value-store-disk_before', rebaseTarget: 'key-value-store-fsdb_after' },
   { branch: 'key-value-store-disk_after', rebaseTarget: 'key-value-store-disk_before' },
+  { branch: 'key-value-store-sst_before', rebaseTarget: 'key-value-store-disk_after' },
+  { branch: 'key-value-store-sst_after', rebaseTarget: 'key-value-store-sst_before' },
 ]
 
 let startIndex = 0
