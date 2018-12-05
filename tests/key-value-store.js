@@ -21,6 +21,9 @@ describe('KeyValueStore', () => {
   // Contains the path for the db files for the currently executing test.
   let dbPath = null
 
+  // How many entries the buffer can store before they get flushed to disk
+  let maxBufferLength = 3
+
   // Allows us to give each test a unique directory.
   let testId = 1
 
@@ -38,7 +41,7 @@ describe('KeyValueStore', () => {
     shell.mkdir('-p', dbPath)
 
     // Before each test, create a new instance of the key-value store.
-    keyValueStore = new KeyValueStore({ dbPath })
+    keyValueStore = new KeyValueStore({ dbPath, maxBufferLength })
     keyValueStore.init()
   })
 
@@ -66,5 +69,30 @@ describe('KeyValueStore', () => {
     keyValueStore.set(testKey1, testValue1)
     keyValueStore.delete(testKey1)
     assert.equal(keyValueStore.get(testKey1), undefined)
+  })
+
+  it('set() flushes buffer to disk after maxBufferLength (3) entries', () => {
+    assert.equal(shell.ls(dbPath).length, 0, 'no files should exist in dbPath yet')
+    keyValueStore.set('test-key-2', 'test-value-2')
+
+    assert.equal(shell.ls(dbPath).length, 0, 'no files should exist in dbPath yet')
+    keyValueStore.set('test-key-1', 'test-value-1')
+
+    assert.equal(shell.ls(dbPath).length, 0, 'no files should exist in dbPath yet')
+    keyValueStore.set('test-key-3', 'test-value-3')
+
+    assert.equal(shell.ls(dbPath).length, 1, 'buffer should be flushed to disk as sorted_string_table_1.json')
+
+    const expectedEntries = [
+      ['test-key-3', 'test-value-3', false],
+      ['test-key-2', 'test-value-2', false],
+      ['test-key-1', 'test-value-1', false],
+    ]
+
+    const expectedSortedStringTableContent = expectedEntries.map(JSON.stringify).join('\n') + '\n'
+    const actualSortedStringTableContent = shell.cat(path.resolve(dbPath, 'sorted_string_table_1.json')).stdout
+    assert.equal(actualSortedStringTableContent, expectedSortedStringTableContent)
+
+    assert.lengthOf(keyValueStore.buffer, 0, 'the buffer should be emptied after flushing to disk')
   })
 })
