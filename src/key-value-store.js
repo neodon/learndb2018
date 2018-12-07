@@ -18,6 +18,11 @@ export class KeyValueStore {
   }
 
   checkAndSet({ key, expectedValue, newValue }) {
-    throw new Error('not implemented')
+    if (this.get(key) === expectedValue) {
+      this.set(key, newValue)
+      return true
+    }
+
+    return false
   }
 }
