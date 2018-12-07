@@ -32,10 +32,7 @@ describe('KeyValueStore', () => {
 
   beforeEach(() => {
     // Generate a unique path in the project root to hold the db files for this test.
-    dbPath = path.resolve(
-      dbTempPath,
-      process.pid.toString() + '_' + (testId++).toString()
-    )
+    dbPath = path.resolve(dbTempPath, process.pid.toString() + '_' + (testId++).toString())
     shell.mkdir('-p', dbPath)
 
     // Before each test, create a new instance of the key-value store.

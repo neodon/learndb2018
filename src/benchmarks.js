@@ -10,9 +10,7 @@ function run() {
   const dbPath = path.resolve(__dirname, '../db_bench')
 
   if (!dbPath.includes('db_bench')) {
-    throw new Error(
-      `Refusing to run benchmarks for db path not containing 'db_bench': ${dbPath}`
-    )
+    throw new Error(`Refusing to run benchmarks for db path not containing 'db_bench': ${dbPath}`)
   }
 
   shell.rm('-rf', dbPath)
@@ -28,10 +26,7 @@ function run() {
 
   suite
     .add('KeyValueStore#set', function() {
-      keyValueStore.set(
-        Math.floor(Math.random() * maxItems).toString(),
-        Math.random().toString()
-      )
+      keyValueStore.set(Math.floor(Math.random() * maxItems).toString(), Math.random().toString())
     })
     .add('KeyValueStore#get', function() {
       keyValueStore.get(Math.floor(Math.random() * maxItems).toString())
