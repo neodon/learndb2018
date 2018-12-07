@@ -7,6 +7,7 @@
   "scripts": {
     "test": "run-s test:e2e",
     "test:e2e": "mocha --require @babel/register --full-trace tests/**/*.js",
+    "test:challenges": "cross-env CHALLENGES=1 run-s test:e2e",
     "rebase": "node --require babel-polyfill --require @babel/register scripts/rebase.js"
   },
   "dependencies": {
