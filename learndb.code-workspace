@@ -4,16 +4,24 @@
       "path": "."
     }
   ],
-  "settings": {},
+  "settings": {
+    "editor.formatOnSave": true,
+    "files.autoSave": "onFocusChange",
+    "javascript.format.enable": false,
+    "prettier.eslintIntegration": true,
+    "prettier.requireConfig": true
+  },
   "extensions": {
     "recommendations": [
-      "editorconfig.editorconfig",
-      "ramyaraoa.show-offset",
       "coenraads.bracket-pair-colorizer",
-      "mikestead.dotenv",
       "dbaeumer.vscode-eslint",
+      "drknoxy.eslint-disable-snippets",
+      "editorconfig.editorconfig",
       "esbenp.prettier-vscode",
-      "mgmcdermott.vscode-language-babel"
+      "mgmcdermott.vscode-language-babel",
+      "mikestead.dotenv",
+      "ramyaraoa.show-offset",
+      "tyriar.sort-lines"
     ]
   }
 }

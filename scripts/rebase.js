@@ -51,8 +51,8 @@ function execMustSucceed(command) {
 
 for (const { branch, rebaseTarget } of rebaseEntries.slice(startIndex)) {
   execMustSucceed(`git co ${branch}`)
-  execMustSucceed(`git fetch`)
-  execMustSucceed(`git status`)
+  execMustSucceed('git fetch')
+  execMustSucceed('git status')
   execMustSucceed(`git rebase --onto ${rebaseTarget} origin/${rebaseTarget}`)
-  execMustSucceed(`git status`)
+  execMustSucceed('git status')
 }
