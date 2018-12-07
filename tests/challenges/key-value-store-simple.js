@@ -1,5 +1,7 @@
 import chai, { assert } from 'chai'
 import chaiString from 'chai-string'
+import path from 'path'
+import shell from 'shelljs'
 import { KeyValueStore } from '../../src/key-value-store'
 
 chai.use(chaiString)
@@ -11,12 +13,35 @@ const tests = () => {
     const testValue1 = 'test-value-1'
     const testValue2 = 'test-value-2'
 
+    // The path where temporary db files will be written, in the project root.
+    const dbTempPath = path.resolve(__dirname, '../../db_temp')
+
     // Contains a fresh instance of the key-value store for each test.
     let keyValueStore = null
 
+    // Contains the path for the db files for the currently executing test.
+    let dbPath = null
+
+    // Allows us to give each test a unique directory.
+    let testId = 1
+
+    before(() => {
+      // Safety check so we don't delete the wrong files
+      assert.endsWith(dbTempPath, 'db_temp')
+      shell.rm('-rf', dbTempPath)
+    })
+
     beforeEach(() => {
+      // Generate a unique path in the project root to hold the db files for this test.
+      dbPath = path.resolve(
+        dbTempPath,
+        process.pid.toString() + '_' + (testId++).toString()
+      )
+      shell.mkdir('-p', dbPath)
+
       // Before each test, create a new instance of the key-value store.
-      keyValueStore = new KeyValueStore()
+      keyValueStore = new KeyValueStore({ dbPath })
+      keyValueStore.init()
     })
 
     // The point of checkAndSet() is to let us avoid accidentally clobbering data
