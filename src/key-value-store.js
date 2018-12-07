@@ -56,32 +56,39 @@ export class KeyValueStore {
         : bufferEntry[VALUE_INDEX] // Return the value for the key
     }
 
-    // readFileSync returns a Buffer object that represents binary data.
-    const buffer = fs.readFileSync(path.resolve(this.dbPath, 'store.json'))
+    const sstFileNames = shell.ls(this.dbPath).filter(fileName => SST_FILE_NAME_REGEXP.test(fileName))
 
-    // Stringify the buffer so we can split it into lines.
-    const bufferString = buffer.toString()
+    if (sstFileNames.length === 0) {
+      return undefined // If there are no SST files, the key can't exist
+    }
 
-    // Split the buffer into lines.
-    const lines = bufferString.split('\n')
+    // Search through the SST files, first to last, top to bottom
+    for (const sstFileName of sstFileNames) {
+      // readFileSync returns a Buffer object that represents binary data.
+      const buffer = fs.readFileSync(path.resolve(this.dbPath, sstFileName))
 
-    // Filter out empty lines--usually the last one since we always write a
-    // newline after each set().  This leaves us with just JSON data.
-    const jsonLines = lines.filter(line => line.length > 0)
+      // Stringify the buffer so we can split it into lines.
+      const bufferString = buffer.toString()
 
-    // Parse the JSON in each line into an array representing an entry.
-    const entries = jsonLines.map(jsonLine => JSON.parse(jsonLine))
+      // Split the buffer into lines.
+      const lines = bufferString.split('\n')
 
-    // We want to search most recent entries first.  In JavaScript, .sort() and
-    // .reverse() modify the array in-place.
-    entries.reverse()
+      // Filter out empty lines--usually the last one since we always write a
+      // newline after each set().  This leaves us with just JSON data.
+      const jsonLines = lines.filter(line => line.length > 0)
 
-    for (const entry of entries) {
-      if (entry[KEY_INDEX] === key) {
+      // Parse the JSON in each line into an array representing an entry.
+      const entries = jsonLines.map(jsonLine => JSON.parse(jsonLine))
+
+      // Find the first entry that matches, if there is one
+      const entry = entries.find(entry => entry[KEY_INDEX] === key)
+
+      if (entry) {
+        // We found the entry with the key in the sst file, so we're done.
         return entry[IS_DELETED_INDEX]
           ? undefined // The isDeleted flag is set to true
           : entry[VALUE_INDEX] // Return the value for the key
-      )
+      }
     }
 
     return undefined // The key was not found
