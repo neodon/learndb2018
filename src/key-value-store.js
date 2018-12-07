@@ -16,4 +16,8 @@ export class KeyValueStore {
   delete(key) {
     this.store[key] = undefined
   }
+
+  checkAndSet({ key, expectedValue, newValue }) {
+    throw new Error('not implemented')
+  }
 }
