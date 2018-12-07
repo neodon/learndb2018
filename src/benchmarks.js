@@ -1,11 +1,22 @@
 import Benchmark from 'benchmark'
+import path from 'path'
+import shell from 'shelljs'
 import { KeyValueStore } from './key-value-store'
 
 const bytesPerMB = 1024 * 1024
 const maxItems = 500
 
 function run() {
-  const keyValueStore = new KeyValueStore()
+  const dbPath = path.resolve(__dirname, '../db_bench')
+
+  if (!dbPath.includes('db_bench')) {
+    throw new Error(`Refusing to run benchmarks for db path not containing 'db_bench': ${dbPath}`)
+  }
+
+  shell.rm('-rf', dbPath)
+  shell.mkdir('-p', dbPath)
+
+  const keyValueStore = new KeyValueStore({ dbPath })
   const suite = new Benchmark.Suite()
 
   const startingRss = process.memoryUsage().rss
