@@ -54,10 +54,10 @@ function execMustSucceed(command) {
 let count = 0
 for (const { branch, rebaseTarget } of rebaseEntries.slice(startIndex)) {
   execMustSucceed(`git co ${branch}`)
-  execMustSucceed(`git fetch`)
-  execMustSucceed(`git status`)
+  execMustSucceed('git fetch')
+  execMustSucceed('git status')
   execMustSucceed(`git rebase ${rebaseTarget}`)
-  execMustSucceed(`git status`)
+  execMustSucceed('git status')
 
   count++
   if (count >= limit) {
