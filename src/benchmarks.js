@@ -4,7 +4,7 @@ import shell from 'shelljs'
 import { KeyValueStore } from './key-value-store'
 
 const bytesPerMB = 1024 * 1024
-const maxItems = 500
+const maxItems = 5000
 
 function run() {
   const dbPath = path.resolve(__dirname, '../db_bench')
@@ -16,7 +16,7 @@ function run() {
   shell.rm('-rf', dbPath)
   shell.mkdir('-p', dbPath)
 
-  const keyValueStore = new KeyValueStore({ dbPath })
+  const keyValueStore = new KeyValueStore({ dbPath, maxBufferLength: 10000 })
   const suite = new Benchmark.Suite()
 
   const startingRss = process.memoryUsage().rss
@@ -38,6 +38,7 @@ function run() {
       console.log(String(event.target))
     })
     .on('complete', function() {
+      keyValueStore.flush()
       const endingRss = process.memoryUsage().rss
       console.log(`Ending RSS memory usage: ${bytesToMB(endingRss)} MB`)
       console.log(`Difference: ${bytesToMB(endingRss - startingRss)} MB`)
@@ -45,7 +46,7 @@ function run() {
     .on('error', function(err) {
       console.error(err)
     })
-    .run({ maxTime: 3, async: true })
+    .run({ maxTime: 10, async: true })
 }
 
 function bytesToMB(bytes) {
