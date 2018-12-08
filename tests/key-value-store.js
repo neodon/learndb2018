@@ -71,6 +71,17 @@ describe('KeyValueStore', () => {
     assert.equal(keyValueStore.get(testKey1), undefined)
   })
 
+  it('flush() flushes buffer to disk', () => {
+    assert.equal(shell.ls(dbPath).length, 0, 'no SST files should exist in dbPath yet')
+    keyValueStore.set('test-key-3', 'test-value-3')
+
+    assert.equal(shell.ls(dbPath).length, 0, 'no SST files should exist in dbPath yet')
+    keyValueStore.flush()
+
+    assert.equal(shell.ls(dbPath).length, 1, 'buffer should be flushed to disk as sorted_string_table_0001.json')
+    assert.lengthOf(keyValueStore.buffer, 0, 'the buffer should be emptied after flushing to disk')
+  })
+
   it('set() flushes buffer to disk after maxBufferLength (3) entries', () => {
     assert.equal(shell.ls(dbPath).length, 0, 'no SST files should exist in dbPath yet')
     keyValueStore.set('test-key-2', 'test-value-2')

@@ -28,6 +28,14 @@ export class KeyValueStore {
       return
     }
 
+    this.flush()
+  }
+
+  flush() {
+    if (this.buffer.length === 0) {
+      return
+    }
+
     const sstFileName = this._generateNextSstFileName()
 
     // Flush the buffer to disk
