@@ -62,7 +62,10 @@ export class KeyValueStore {
       return undefined // If there are no SST files, the key can't exist
     }
 
-    // Search through the SST files, first to last, top to bottom
+    // We want to search most recent SSTs first so we get the latest entries
+    sstFileNames.reverse()
+
+    // Search through the SST files, newest to oldest, top to bottom
     for (const sstFileName of sstFileNames) {
       // readFileSync returns a Buffer object that represents binary data.
       const buffer = fs.readFileSync(path.resolve(this.dbPath, sstFileName))
@@ -111,13 +114,13 @@ export class KeyValueStore {
     const existingSstFileNames = shell.ls(this.dbPath).filter(fileName => SST_FILE_NAME_REGEXP.test(fileName))
 
     if (existingSstFileNames.length === 0) {
-      return 'sorted_string_table_1.json'
+      return 'sorted_string_table_0001.json'
     }
 
     const lastSstFileName = existingSstFileNames.pop()
     const lastSstIndexString = SST_FILE_NAME_REGEXP.exec(lastSstFileName)[1]
     const lastSstIndex = parseInt(lastSstIndexString)
-    const nextSstFileName = `sorted_string_table_${lastSstIndex + 1}.json`
+    const nextSstFileName = `sorted_string_table_${(lastSstIndex + 1).toString().padStart(4, '0')}.json`
     return nextSstFileName
   }
 }

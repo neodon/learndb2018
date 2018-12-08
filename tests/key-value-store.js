@@ -72,16 +72,29 @@ describe('KeyValueStore', () => {
   })
 
   it('set() flushes buffer to disk after maxBufferLength (3) entries', () => {
-    assert.equal(shell.ls(dbPath).length, 0, 'no files should exist in dbPath yet')
+    assert.equal(shell.ls(dbPath).length, 0, 'no SST files should exist in dbPath yet')
     keyValueStore.set('test-key-2', 'test-value-2')
 
-    assert.equal(shell.ls(dbPath).length, 0, 'no files should exist in dbPath yet')
+    assert.equal(shell.ls(dbPath).length, 0, 'no SST files should exist in dbPath yet')
     keyValueStore.set('test-key-1', 'test-value-1')
 
-    assert.equal(shell.ls(dbPath).length, 0, 'no files should exist in dbPath yet')
+    assert.equal(shell.ls(dbPath).length, 0, 'no SST files should exist in dbPath yet')
     keyValueStore.set('test-key-3', 'test-value-3')
 
-    assert.equal(shell.ls(dbPath).length, 1, 'buffer should be flushed to disk as sorted_string_table_1.json')
+    assert.equal(shell.ls(dbPath).length, 1, 'buffer should be flushed to disk as sorted_string_table_0001.json')
+    assert.lengthOf(keyValueStore.buffer, 0, 'the buffer should be emptied after flushing to disk')
+
+    assert.equal(shell.ls(dbPath).length, 1, 'first SST file should exist in dbPath')
+    keyValueStore.set('test-key-2', 'test-value-2')
+
+    assert.equal(shell.ls(dbPath).length, 1, 'first SST file should exist in dbPath')
+    keyValueStore.set('test-key-1', 'test-value-1')
+
+    assert.equal(shell.ls(dbPath).length, 1, 'first SST file should exist in dbPath')
+    keyValueStore.set('test-key-3', 'test-value-3')
+
+    assert.equal(shell.ls(dbPath).length, 2, 'buffer should be flushed to disk as sorted_string_table_0002.json')
+    assert.lengthOf(keyValueStore.buffer, 0, 'the buffer should be emptied after flushing to disk')
 
     const expectedEntries = [
       ['test-key-3', 'test-value-3', false],
@@ -90,9 +103,11 @@ describe('KeyValueStore', () => {
     ]
 
     const expectedSortedStringTableContent = expectedEntries.map(JSON.stringify).join('\n') + '\n'
-    const actualSortedStringTableContent = shell.cat(path.resolve(dbPath, 'sorted_string_table_1.json')).stdout
-    assert.equal(actualSortedStringTableContent, expectedSortedStringTableContent)
 
-    assert.lengthOf(keyValueStore.buffer, 0, 'the buffer should be emptied after flushing to disk')
+    const actualSortedStringTableContent1 = shell.cat(path.resolve(dbPath, 'sorted_string_table_0001.json')).stdout
+    assert.equal(actualSortedStringTableContent1, expectedSortedStringTableContent)
+
+    const actualSortedStringTableContent2 = shell.cat(path.resolve(dbPath, 'sorted_string_table_0002.json')).stdout
+    assert.equal(actualSortedStringTableContent2, expectedSortedStringTableContent)
   })
 })
