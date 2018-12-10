@@ -91,8 +91,29 @@ export class KeyValueStore {
       // Parse the JSON in each line into an array representing an entry.
       const entries = jsonLines.map(jsonLine => JSON.parse(jsonLine))
 
-      // Find the first entry that matches, if there is one
-      const entry = entries.find(entry => entry[KEY_INDEX] === key)
+      let entry = undefined
+      let first = 0
+      let last = entries.length - 1
+
+      // eslint-disable-next-line no-constant-condition
+      while (true) {
+        const mid = first + Math.floor((last - first) / 2)
+
+        if (entries[mid][KEY_INDEX] === key) {
+          entry = entries[mid]
+          break
+        }
+
+        if (first === last) {
+          break
+        }
+
+        if (entries[mid][KEY_INDEX] > key) {
+          last = mid - 1
+        } else {
+          first = mid + 1
+        }
+      }
 
       if (entry) {
         // We found the entry with the key in the sst file, so we're done.
