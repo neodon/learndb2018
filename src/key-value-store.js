@@ -20,8 +20,7 @@ export class KeyValueStore {
   }
 
   set(key, value, isDeleted = false) {
-    // We put most recent entries first so we can search them first.
-    this.buffer.unshift([key, value, isDeleted])
+    this.buffer.push([key, value, isDeleted])
 
     if (this.buffer.length < this.maxBufferLength) {
       // The buffer isn't full yet, so we're done
@@ -36,6 +35,12 @@ export class KeyValueStore {
       return
     }
 
+    // De-duplicate buffer entries for the same key, preserving only the last entry.
+    const bufferObject = {}
+    for (const entry of this.buffer) {
+      bufferObject[entry[KEY_INDEX]] = entry
+    }
+
     const sstFileName = this._generateNextSstFileName()
 
     // Flush the buffer to disk
@@ -43,10 +48,9 @@ export class KeyValueStore {
       path.resolve(this.dbPath, sstFileName),
       // Stringify the buffer entries, reverse sort them, and then join them
       // into one string separated by newlines.  Still need a final trailing newline.
-      this.buffer
-        .map(JSON.stringify)
+      Object.keys(bufferObject)
+        .map(key => JSON.stringify(bufferObject[key]))
         .sort()
-        .reverse()
         .join('\n') + '\n'
     )
 
@@ -54,15 +58,17 @@ export class KeyValueStore {
   }
 
   get(key) {
-    // First, check the buffer for the most recent entry with the key
-    const bufferEntry = this.buffer.find(entry => entry[KEY_INDEX] === key)
-
-    if (bufferEntry) {
-      // We found the entry with the key in the buffer, so we're done.
-      return bufferEntry[IS_DELETED_INDEX]
-        ? undefined // The isDeleted flag is set to true
-        : bufferEntry[VALUE_INDEX] // Return the value for the key
+    // First, check the buffer for the most recent entry with the key.
+    for (let i = this.buffer.length - 1; i >= 0; i--) {
+      if (this.buffer[i][KEY_INDEX] === key) {
+        // We found the entry with the key in the buffer, so we're done.
+        return this.buffer[i][IS_DELETED_INDEX]
+          ? undefined // The isDeleted flag is set to true
+          : this.buffer[i][VALUE_INDEX] // Return the value for the key
+      }
     }
+
+    // The key isn't in the buffer, so now we search the SST files
 
     const sstFileNames = shell.ls(this.dbPath).filter(fileName => SST_FILE_NAME_REGEXP.test(fileName))
 
@@ -104,7 +110,7 @@ export class KeyValueStore {
           break
         }
 
-        if (first === last) {
+        if (first >= last) {
           break
         }
 

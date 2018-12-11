@@ -108,9 +108,9 @@ describe('KeyValueStore', () => {
     assert.lengthOf(keyValueStore.buffer, 0, 'the buffer should be emptied after flushing to disk')
 
     const expectedEntries = [
-      ['test-key-3', 'test-value-3', false],
-      ['test-key-2', 'test-value-2', false],
       ['test-key-1', 'test-value-1', false],
+      ['test-key-2', 'test-value-2', false],
+      ['test-key-3', 'test-value-3', false],
     ]
 
     const expectedSortedStringTableContent = expectedEntries.map(JSON.stringify).join('\n') + '\n'
