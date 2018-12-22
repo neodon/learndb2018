@@ -23,7 +23,7 @@ export class KeyValueStore {
     this.buffer.push([key, value, isDeleted])
 
     if (this.buffer.length < this.maxBufferLength) {
-      // The buffer isn't full yet, so we're done
+      // The buffer isn't full yet, so we're done.
       return
     }
 
@@ -43,11 +43,10 @@ export class KeyValueStore {
 
     const sstFileName = this._generateNextSstFileName()
 
-    // Flush the buffer to disk
+    // Flush the buffer to disk.
     fs.writeFileSync(
       path.resolve(this.dbPath, sstFileName),
-      // Stringify the buffer entries, reverse sort them, and then join them
-      // into one string separated by newlines.  Still need a final trailing newline.
+      // Stringify the buffer entries, reverse sort them, and then join them into one string separated by newlines.
       Object.keys(bufferObject)
         .map(key => JSON.stringify(bufferObject[key]))
         .sort()
@@ -70,16 +69,18 @@ export class KeyValueStore {
 
     // The key isn't in the buffer, so now we search the SST files
 
+    // The key wasn't found in the buffer, so now we search the SST files.
     const sstFileNames = shell.ls(this.dbPath).filter(fileName => SST_FILE_NAME_REGEXP.test(fileName))
 
     if (sstFileNames.length === 0) {
-      return undefined // If there are no SST files, the key can't exist
+      // If there are no SST files, the key can't exist.
+      return undefined
     }
 
-    // We want to search most recent SSTs first so we get the latest entries
+    // We want to search the newest SSTs first so that we get the newest entry for the key.
     sstFileNames.reverse()
 
-    // Search through the SST files, newest to oldest, top to bottom
+    // Search through the SST files, newest to oldest.
     for (const sstFileName of sstFileNames) {
       // readFileSync returns a Buffer object that represents binary data.
       const buffer = fs.readFileSync(path.resolve(this.dbPath, sstFileName))
@@ -105,18 +106,22 @@ export class KeyValueStore {
       while (true) {
         const mid = first + Math.floor((last - first) / 2)
 
+        // We found the key
         if (entries[mid][KEY_INDEX] === key) {
           entry = entries[mid]
           break
         }
 
+        // The search range has closed
         if (first >= last) {
           break
         }
 
         if (entries[mid][KEY_INDEX] > key) {
+          // The key might exist in an entry before this entry
           last = mid - 1
         } else {
+          // The key might exist in an entry after this entry
           first = mid + 1
         }
       }
@@ -129,7 +134,8 @@ export class KeyValueStore {
       }
     }
 
-    return undefined // The key was not found
+    // The key was not found.
+    return undefined
   }
 
   delete(key) {
@@ -152,10 +158,21 @@ export class KeyValueStore {
       return 'sorted_string_table_0001.json'
     }
 
+    // By default, ls returns a file list sorted by name.  So we can use pop() to get the filename for the newest SST
+    // file, which will also have the highest index.
     const lastSstFileName = existingSstFileNames.pop()
+
+    // The regex matches the format of SST file names and extracts the index.
     const lastSstIndexString = SST_FILE_NAME_REGEXP.exec(lastSstFileName)[1]
+
+    // We need to explicitly parse it to an Int before we can increment it.
     const lastSstIndex = parseInt(lastSstIndexString)
-    const nextSstFileName = `sorted_string_table_${(lastSstIndex + 1).toString().padStart(4, '0')}.json`
+    const nextSstIndex = lastSstIndex + 1
+
+    // E.g. 1 becomes '0001' and 123 becomes '0123'.
+    const nextSstIndexPaddedString = nextSstIndex.toString().padStart(4, '0')
+
+    const nextSstFileName = `sorted_string_table_${nextSstIndexPaddedString}.json`
     return nextSstFileName
   }
 }
