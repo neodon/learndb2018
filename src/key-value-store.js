@@ -50,24 +50,20 @@ export class KeyValueStore {
       Object.keys(bufferObject)
         .map(key => JSON.stringify(bufferObject[key]))
         .sort()
-        .join('\n') + '\n'
+        .join('\n')
     )
 
     this.buffer = []
   }
 
   get(key) {
-    // First, check the buffer for the most recent entry with the key.
-    for (let i = this.buffer.length - 1; i >= 0; i--) {
-      if (this.buffer[i][KEY_INDEX] === key) {
-        // We found the entry with the key in the buffer, so we're done.
-        return this.buffer[i][IS_DELETED_INDEX]
-          ? undefined // The isDeleted flag is set to true
-          : this.buffer[i][VALUE_INDEX] // Return the value for the key
-      }
-    }
+    // First, check the buffer for the newest entry with the key.
+    const latestBufferEntryValue = this._findLatestBufferEntryValue(key)
 
-    // The key isn't in the buffer, so now we search the SST files
+    if (latestBufferEntryValue !== undefined) {
+      // It was found in the buffer, so we're done.
+      return latestBufferEntryValue
+    }
 
     // The key wasn't found in the buffer, so now we search the SST files.
     const sstFileNames = shell.ls(this.dbPath).filter(fileName => SST_FILE_NAME_REGEXP.test(fileName))
@@ -82,55 +78,12 @@ export class KeyValueStore {
 
     // Search through the SST files, newest to oldest.
     for (const sstFileName of sstFileNames) {
-      // readFileSync returns a Buffer object that represents binary data.
-      const buffer = fs.readFileSync(path.resolve(this.dbPath, sstFileName))
+      // Parse the SST file into an array of entries.  It's the same structure as the buffer, but it's sorted.
+      const entries = this._loadEntriesFromSstFile(sstFileName)
+      const entryValue = this._findEntryValue(key, entries)
 
-      // Stringify the buffer so we can split it into lines.
-      const bufferString = buffer.toString()
-
-      // Split the buffer into lines.
-      const lines = bufferString.split('\n')
-
-      // Filter out empty lines--usually the last one since we always write a
-      // newline after each set().  This leaves us with just JSON data.
-      const jsonLines = lines.filter(line => line.length > 0)
-
-      // Parse the JSON in each line into an array representing an entry.
-      const entries = jsonLines.map(jsonLine => JSON.parse(jsonLine))
-
-      let entry = undefined
-      let first = 0
-      let last = entries.length - 1
-
-      // eslint-disable-next-line no-constant-condition
-      while (true) {
-        const mid = first + Math.floor((last - first) / 2)
-
-        // We found the key
-        if (entries[mid][KEY_INDEX] === key) {
-          entry = entries[mid]
-          break
-        }
-
-        // The search range has closed
-        if (first >= last) {
-          break
-        }
-
-        if (entries[mid][KEY_INDEX] > key) {
-          // The key might exist in an entry before this entry
-          last = mid - 1
-        } else {
-          // The key might exist in an entry after this entry
-          first = mid + 1
-        }
-      }
-
-      if (entry) {
-        // We found the entry with the key in the sst file, so we're done.
-        return entry[IS_DELETED_INDEX]
-          ? undefined // The isDeleted flag is set to true
-          : entry[VALUE_INDEX] // Return the value for the key
+      if (entryValue !== undefined) {
+        return entryValue
       }
     }
 
@@ -174,5 +127,75 @@ export class KeyValueStore {
 
     const nextSstFileName = `sorted_string_table_${nextSstIndexPaddedString}.json`
     return nextSstFileName
+  }
+
+  _findLatestBufferEntryValue(key) {
+    // Search the entries from most recent to oldest.
+    for (let i = this.buffer.length - 1; i >= 0; i--) {
+      if (this.buffer[i][KEY_INDEX] === key) {
+        // We found the entry with the key in the buffer, so we're done.
+        return this.buffer[i][IS_DELETED_INDEX]
+          ? undefined // The isDeleted flag is set to true.
+          : this.buffer[i][VALUE_INDEX] // Return the value for the key.
+      }
+    }
+
+    // The key was not found in the buffer.
+    return undefined
+  }
+
+  _loadEntriesFromSstFile(sstFileName) {
+    // readFileSync returns a Buffer object that represents binary data.
+    const buffer = fs.readFileSync(path.resolve(this.dbPath, sstFileName))
+
+    // Stringify the buffer so we can split it into lines.
+    const bufferString = buffer.toString()
+
+    // Split the buffer into lines, each representing an entry in JSON format.
+    const lines = bufferString.trim().split('\n')
+
+    // Parse the JSON in each line into an array representing an entry.
+    const entries = lines.map(jsonLine => JSON.parse(jsonLine))
+    return entries
+  }
+
+  _findEntryValue(key, entries) {
+    let entry = undefined
+    let first = 0
+    let last = entries.length - 1
+
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      const mid = first + Math.floor((last - first) / 2)
+
+      // We found the key.
+      if (entries[mid][KEY_INDEX] === key) {
+        entry = entries[mid]
+        break
+      }
+
+      // The search range has closed.
+      if (first >= last) {
+        break
+      }
+
+      if (entries[mid][KEY_INDEX] > key) {
+        // The key might exist in an entry before this entry.
+        last = mid - 1
+      } else {
+        // The key might exist in an entry after this entry.
+        first = mid + 1
+      }
+    }
+
+    if (entry) {
+      // We found the entry with the key in the sst file, so we're done.
+      return entry[IS_DELETED_INDEX]
+        ? undefined // The isDeleted flag is set to true.
+        : entry[VALUE_INDEX] // Return the value for the key.
+    }
+
+    // The key was not found in the given entries.
+    return undefined
   }
 }

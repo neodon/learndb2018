@@ -113,7 +113,7 @@ describe('KeyValueStore', () => {
       ['test-key-3', 'test-value-3', false],
     ]
 
-    const expectedSortedStringTableContent = expectedEntries.map(JSON.stringify).join('\n') + '\n'
+    const expectedSortedStringTableContent = expectedEntries.map(JSON.stringify).join('\n')
 
     const actualSortedStringTableContent1 = shell.cat(path.resolve(dbPath, 'sorted_string_table_0001.json')).stdout
     assert.equal(actualSortedStringTableContent1, expectedSortedStringTableContent)
