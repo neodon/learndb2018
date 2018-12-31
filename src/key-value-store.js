@@ -61,7 +61,7 @@ export class KeyValueStore {
     const latestBufferEntryValue = this._findLatestBufferEntryValue(key)
 
     if (latestBufferEntryValue !== undefined) {
-      // It was found in the buffer, so we're done.
+      // The key was found in an entry in the buffer, so we're done.
       return latestBufferEntryValue
     }
 
@@ -83,6 +83,7 @@ export class KeyValueStore {
       const entryValue = this._findEntryValue(key, entries)
 
       if (entryValue !== undefined) {
+        // The key was found in an entry in the current SST file, so we're done.
         return entryValue
       }
     }
@@ -161,12 +162,11 @@ export class KeyValueStore {
 
   _findEntryValue(key, entries) {
     let entry = undefined
-    let first = 0
-    let last = entries.length - 1
+    let left = 0
+    let right = entries.length - 1
 
-    // eslint-disable-next-line no-constant-condition
-    while (true) {
-      const mid = first + Math.floor((last - first) / 2)
+    while (left <= right) {
+      const mid = left + Math.floor((right - left) / 2)
 
       // We found the key.
       if (entries[mid][KEY_INDEX] === key) {
@@ -174,17 +174,12 @@ export class KeyValueStore {
         break
       }
 
-      // The search range has closed.
-      if (first >= last) {
-        break
-      }
-
       if (entries[mid][KEY_INDEX] > key) {
         // The key might exist in an entry before this entry.
-        last = mid - 1
+        right = mid - 1
       } else {
         // The key might exist in an entry after this entry.
-        first = mid + 1
+        left = mid + 1
       }
     }
 
