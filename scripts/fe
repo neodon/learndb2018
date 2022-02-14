@@ -3,10 +3,10 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 branches=(
-  ksv-simple
-  ksv-fsdb
-  ksv-disk
-  ksv-sst
+  ksv-01-simple
+  ksv-02-fsdb
+  ksv-03-disk
+  ksv-04-sst
 )
 
 function main() {
