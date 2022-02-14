@@ -1,0 +1,24 @@
+#!/bin/bash
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+tip='ksv-04-sst'
+
+function main() {
+  git switch -q "$tip"
+  last_branch="$tip"
+
+  git log --pretty=format:'%h %s' | while read -r log; do
+    echo "log=$log"
+    sha="$(cut -d' ' -f1 <<<"$log")"
+    sub="$(cut -d' ' -f2 <<<"$log")"
+    branch="${sub%:}"
+    if [[ "$branch" != "$last_branch" ]]; then
+      echo "Detected branch change for last_branch=$last_branch: Assigning branch=$branch to sha=$sha"
+      git branch -f "$branch" "$sha"
+      last_branch="$branch"
+    fi
+  done
+}
+
+main "$@"
